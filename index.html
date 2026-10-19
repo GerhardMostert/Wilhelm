@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roseinheim Aerial Services — Invoice Maker</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255,255,255,.92);
+      --panel-2: #f7f9fc;
+      --line: #dde4ec;
+      --muted: #687789;
+      --text: #17212b;
+      --accent: #18a66a;
+      --accent-2: #168ad2;
+      --danger: #d94b4b;
+      --paper: #ffffff;
+      --ink: #17212b;
+      --paper-muted: #6b7480;
+      --shadow: 0 22px 60px rgba(0,0,0,.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(22,138,210,.10), transparent 30%),
+        radial-gradient(circle at 100% 8%, rgba(24,166,106,.09), transparent 30%),
+        var(--bg);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+    }
+
+    .builder {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 22px;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,249,252,.98));
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent), #78ffc0);
+      box-shadow: 0 10px 30px rgba(24,166,106,.18);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-weight: 750;
+      color: var(--text);
+      background: #ffffff;
+      transition: transform .16s ease, border-color .16s ease, filter .16s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: #bdc9d5; box-shadow: 0 4px 14px rgba(23,33,43,.06); }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), #62efac);
+      color: #ffffff;
+      border: 0;
+    }
+    .btn.blue {
+      background: linear-gradient(135deg, #259ee8, var(--accent-2));
+      color: white;
+      border: 0;
+    }
+    .btn.ghost { background: transparent; }
+    .btn.danger { color: #b12f2f; background: #fff2f2; border-color: #f0caca; }
+    .btn.small { padding: 8px 10px; font-size: 12px; }
+
+    .status {
+      padding: 10px 12px;
+      border: 1px solid #cfe9dc;
+      background: #eefaf4;
+      border-radius: 12px;
+      color: #277253;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .section summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section summary::-webkit-details-marker { display:none; }
+    .section summary span:last-child { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .section-body { padding: 0 16px 16px; }
+
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap: 10px; }
+    .field { margin-top: 10px; }
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #59697a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 11px;
+      border: 1px solid #d6dee7;
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(53,185,255,.6);
+      box-shadow: 0 0 0 3px rgba(53,185,255,.09);
+    }
+    textarea { min-height: 76px; resize: vertical; }
+    select option { background: #ffffff; color: #17212b; }
+
+    .row-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+      background: #f9fbfd;
+    }
+
+    .row-card .remove-line {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 27px;
+      height: 27px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,107,107,.25);
+      background: rgba(255,107,107,.08);
+      color: #c73f3f;
+    }
+
+    .check-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      color: #526273;
+      font-size: 13px;
+    }
+    .check-row input { width: auto; accent-color: var(--accent); }
+
+    .saved-invoice-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .saved-invoice-card {
+      border: 1px solid var(--line);
+      background: #f9fbfd;
+      border-radius: 12px;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+    }
+    .saved-invoice-card:hover {
+      border-color: #b8c7d6;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(23,33,43,.05);
+    }
+    .saved-invoice-card.active { border-color: #7bc6a3; background: #f0fbf6; }
+    .saved-invoice-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .saved-invoice-no { font-size: 13px; font-weight: 900; }
+    .saved-invoice-amount { font-size: 12px; font-weight: 850; color: #198256; }
+    .saved-invoice-client { margin-top: 3px; color: #536273; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .saved-invoice-date { margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .saved-empty {
+      border: 1px dashed #ccd6e0;
+      border-radius: 12px;
+      padding: 15px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      background: #fafcfe;
+    }
+
+    .preview-wrap {
+      padding: 38px;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .paper {
+      width: min(100%, 900px);
+      min-height: 1120px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      border-radius: 4px;
+      padding: 54px 58px 46px;
+      position: relative;
+    }
+
+    .invoice-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 28px;
+    }
+
+    .company-name {
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+    }
+
+    .invoice-word {
+      font-size: 52px;
+      line-height: .9;
+      font-weight: 300;
+      letter-spacing: -.05em;
+      color: #6c7279;
+    }
+
+    .meta-grid {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .address-block, .client-block {
+      white-space: pre-line;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .invoice-meta {
+      min-width: 260px;
+      display: grid;
+      grid-template-columns: 95px 1fr;
+      gap: 8px 14px;
+      align-items: baseline;
+      font-size: 14px;
+    }
+    .invoice-meta strong { text-align: right; font-weight: 900; }
+    .invoice-meta span { text-align: right; }
+
+    .bill-title {
+      margin-top: 34px;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 28px;
+      font-size: 14px;
+    }
+    .items-table th, .items-table td {
+      border: 1.5px solid #222;
+      padding: 12px 10px;
+    }
+    .items-table th {
+      background: #f3f3f3;
+      text-align: center;
+      font-weight: 900;
+    }
+    .items-table td:last-child, .items-table th:last-child { width: 205px; }
+    .amount-cell { text-align: right; white-space: nowrap; }
+
+    .totals {
+      width: 360px;
+      margin-left: auto;
+      margin-top: -1.5px;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .totals td {
+      border: 1.5px solid #222;
+      padding: 10px;
+    }
+    .totals td:first-child {
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      border-top-color: transparent;
+      text-align: right;
+      font-weight: 900;
+    }
+    .totals td:last-child { text-align:right; white-space:nowrap; }
+
+    .notes {
+      margin-top: 30px;
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .bank-card {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #f6f8fa;
+      border: 1px solid #e5e9ed;
+    }
+    .bank-card small {
+      display: block;
+      color: var(--paper-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .bank-card strong { font-size: 13px; }
+
+    .thank-you {
+      position: absolute;
+      left: 58px;
+      right: 58px;
+      bottom: 34px;
+      text-align: center;
+      color: #6f7881;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .16em;
+    }
+
+    .mini-actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .hint { color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 8px; }
+
+
+    .library-overlay, .invoice-viewer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(23,33,43,.28);
+      backdrop-filter: blur(8px);
+      padding: 28px;
+      overflow: auto;
+    }
+    .library-shell, .invoice-viewer-shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #dce4ec;
+      border-radius: 24px;
+      box-shadow: 0 28px 80px rgba(23,33,43,.20);
+      overflow: hidden;
+    }
+    .library-head, .invoice-viewer-head {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:20px;
+      padding: 26px 28px 20px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg,#fff,#f8fbfd);
+    }
+    .library-head h2, .invoice-viewer-head h2 { margin:4px 0 4px; font-size:28px; letter-spacing:-.03em; }
+    .library-head p { margin:0; color:var(--muted); font-size:13px; }
+    .library-kicker { color:var(--accent-2); font-size:10px; font-weight:900; letter-spacing:.16em; }
+    .library-close {
+      width:42px; height:42px; border-radius:12px; border:1px solid var(--line); background:#fff;
+      font-size:24px; line-height:1; color:#526273;
+    }
+    .library-toolbar { display:flex; gap:14px; align-items:center; padding:18px 28px; border-bottom:1px solid var(--line); }
+    .library-toolbar input { max-width:440px; }
+    .library-count { margin-left:auto; font-size:12px; color:var(--muted); font-weight:800; }
+    .library-grid { padding:24px 28px 32px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+    .library-card {
+      border:1px solid var(--line); border-radius:16px; padding:16px; background:#fbfcfe; cursor:pointer;
+      transition:.16s ease;
+    }
+    .library-card:hover { transform:translateY(-2px); border-color:#aebdcb; box-shadow:0 8px 24px rgba(23,33,43,.08); background:#fff; }
+    .library-card-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .library-card-no { font-weight:900; font-size:15px; }
+    .library-card-total { font-weight:900; color:#198256; font-size:13px; white-space:nowrap; }
+    .library-card-client { margin-top:8px; color:#445567; font-size:13px; font-weight:700; }
+    .library-card-meta { margin-top:8px; display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:11px; }
+    .library-empty { grid-column:1 / -1; border:1px dashed #c9d4df; border-radius:16px; padding:40px 20px; text-align:center; color:var(--muted); }
+    .viewer-actions { padding:14px 28px; display:flex; gap:10px; border-bottom:1px solid var(--line); background:#fff; flex-wrap:wrap; }
+    .viewer-preview-wrap { padding:28px; background:#eef3f7; overflow:auto; display:flex; justify-content:center; }
+    .viewer-paper { width:min(100%,820px); min-height:1050px; box-shadow:0 18px 50px rgba(23,33,43,.16); }
+    body.modal-open { overflow:hidden; }
+
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 370px minmax(0, 1fr); }
+      .preview-wrap { padding: 24px; }
+      .paper { padding: 42px; min-height: 1030px; }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell { display:block; }
+      .builder { position:relative; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+      .preview-wrap { padding: 16px; }
+      .paper { min-height: 980px; padding: 30px 24px 60px; }
+      .invoice-word { font-size: 38px; }
+      .meta-grid { grid-template-columns: 1fr; gap: 20px; }
+      .invoice-meta { min-width:0; }
+      .bank-card { grid-template-columns: 1fr; }
+      .thank-you { left:24px; right:24px; }
+      .library-overlay, .invoice-viewer-overlay { padding:10px; }
+      .library-head, .invoice-viewer-head, .library-toolbar, .viewer-actions { padding-left:16px; padding-right:16px; }
+      .library-grid { padding:16px; grid-template-columns:1fr; }
+      .viewer-preview-wrap { padding:12px; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { background: white; }
+      .builder { display: none !important; }
+      .app-shell { display:block; }
+      .preview-wrap { padding:0; display:block; }
+      .paper {
+        width: 210mm;
+        min-height: 297mm;
+        margin:0;
+        box-shadow:none;
+        border-radius:0;
+        padding: 14mm 15mm 13mm;
+      }
+      .thank-you { left:15mm; right:15mm; bottom:10mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="builder">
+      <div class="brand">
+        <div class="brand-mark">RA</div>
+        <div>
+          <h1>Invoice Maker</h1>
+          <p>Roseinheim Aerial Services</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary" id="saveInvoiceBtn">Save invoice</button>
+        <button class="btn blue" id="newInvoiceBtn">New invoice</button>
+      </div>
+      <div class="status" id="status">Auto-save is on. Your invoice stays in this browser.</div>
+
+      <details class="section" open>
+        <summary><span>Invoice details</span><span>Date & number</span></summary>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="field">
+              <label for="invoiceDate">Date</label>
+              <input id="invoiceDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="invoiceNo">Invoice #</label>
+              <input id="invoiceNo" value="007/26" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="forSelect">For</label>
+            <select id="forSelect">
+              <option>Fire Fighting</option>
+              <option>Crop Spraying</option>
+              <option>Spray Commission</option>
+              <option>Ferry Flight</option>
+              <option>Aircraft Hire</option>
+              <option>Survey / Inspection</option>
+              <option value="custom">Other / Custom</option>
+            </select>
+          </div>
+          <div class="field" id="customForWrap" hidden>
+            <label for="customFor">Custom “For” text</label>
+            <input id="customFor" placeholder="e.g. Fire season standby" />
+          </div>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary><span>Bill to</span><span>Client presets</span></summary>
+        <div class="section-body">
+          <div class="field">
+            <label for="clientSelect">Client</label>
+            <select id="clientSelect"></select>
+          </div>
+          <div class="field">
+            <label for="clientName">Client name</label>
+            <input id="clientName" />
+          </div>
+          <div class="field">
+            <label for="clientAddress">Address / contact</label>
+            <textarea id="clientAddress"></textarea>
+          </div>
+          <div class="mini-actions">
+            <button class="btn small" id="saveClientBtn">Save client preset</button>
+            <button class="btn small ghost" id="deleteClientBtn">Delete preset</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary><span>Line items</span><span>Dropdown + amount</span></summary>
+        <div class="section-body">
+          <div id="lineItems"></div>
+          <button class="btn small primary" id="addLineBtn" style="margin-top:10px;">+ Add line item</button>
+          <label class="check-row">
+            <input type="checkbox" id="vatEnabled" /> Include VAT
+          </label>
+          <div class="field" id="vatRateWrap" hidden>
+            <label for="vatRate">VAT rate %</label>
+            <input id="vatRate" type="number" min="0" step="0.1" value="15" />
+          </div>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary><span>My invoices</span><span id="savedCount">0 saved</span></summary>
+        <div class="section-body">
+          <div class="hint">Open your invoice library to see every invoice you have saved.</div>
+          <button class="btn blue" id="openLibraryBtn" style="width:100%;margin-top:10px;">Open invoice library</button>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary><span>Your business</span><span>Editable defaults</span></summary>
+        <div class="section-body">
+          <div class="field">
+            <label for="companyName">Business name</label>
+            <input id="companyName" value="RoseinheimAerail Services" />
+          </div>
+          <div class="field">
+            <label for="companyAddress">Business address / phone</label>
+            <textarea id="companyAddress">241 Cambridge Street\nBethlehem, 9701\n(83) 228-5693</textarea>
+          </div>
+          <div class="field">
+            <label for="paymentNote">Payment note</label>
+            <input id="paymentNote" value="Make all checks payable to RoseinheimAerail Services" />
+          </div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary><span>Bank details</span><span>FNB</span></summary>
+        <div class="section-body">
+          <div class="field">
+            <label for="accountName">Account name</label>
+            <input id="accountName" value="Roseneheim Aerial Services" />
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="bankName">Bank</label>
+              <input id="bankName" value="FNB" />
+            </div>
+            <div class="field">
+              <label for="branchCode">Branch code</label>
+              <input id="branchCode" value="250655" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="accountNo">Account number</label>
+            <input id="accountNo" value="63058571704" />
+          </div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary><span>Actions</span><span>Backup / reset</span></summary>
+        <div class="section-body">
+          <div class="mini-actions">
+            <button class="btn small" id="exportBtn">Export data</button>
+            <button class="btn small" id="importBtn">Import data</button>
+            <input id="importFile" type="file" accept="application/json" hidden />
+            <button class="btn small danger" id="resetBtn">Reset app</button>
+          </div>
+          <div class="hint">Everything works offline in this one HTML file. Saved invoices stay in this browser unless you export a backup.</div>
+        </div>
+      </details>
+    </aside>
+
+    <main class="preview-wrap">
+      <section class="paper" id="invoicePaper">
+        <div class="invoice-head">
+          <div class="company-name" id="pCompanyName"></div>
+          <div class="invoice-word">INVOICE</div>
+        </div>
+
+        <div class="meta-grid">
+          <div>
+            <div class="address-block" id="pCompanyAddress"></div>
+            <div class="bill-title">Bill To:</div>
+            <div class="client-block"><strong id="pClientName"></strong><br><span id="pClientAddress"></span></div>
+          </div>
+          <div class="invoice-meta">
+            <strong>DATE:</strong><span id="pDate"></span>
+            <strong>INVOICE #</strong><span id="pInvoiceNo"></span>
+            <strong>FOR:</strong><span id="pFor"></span>
+          </div>
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr><th>DESCRIPTION</th><th>AMOUNT</th></tr>
+          </thead>
+          <tbody id="pItems"></tbody>
+        </table>
+
+        <table class="totals" id="pTotals"></table>
+
+        <div class="notes">
+          <div id="pPaymentNote"></div>
+          <div class="bank-card">
+            <div><small>Account</small><strong id="pAccountName"></strong></div>
+            <div><small>Bank / Branch</small><strong><span id="pBank"></span> · <span id="pBranch"></span></strong></div>
+            <div><small>Account no.</small><strong id="pAccountNo"></strong></div>
+          </div>
+        </div>
+
+        <div class="thank-you">THANK YOU FOR YOUR BUSINESS!</div>
+      </section>
+    </main>
+  </div>
+
+
+  <div class="library-overlay" id="libraryOverlay" hidden>
+    <div class="library-shell">
+      <div class="library-head">
+        <div>
+          <div class="library-kicker">INVOICE ARCHIVE</div>
+          <h2>My invoices</h2>
+          <p>Choose an invoice to preview it, edit it, or download a PDF copy.</p>
+        </div>
+        <button class="library-close" id="closeLibraryBtn" aria-label="Close">×</button>
+      </div>
+      <div class="library-toolbar">
+        <input id="librarySearch" placeholder="Search invoice number or client..." />
+        <div class="library-count" id="libraryCount">0 invoices</div>
+      </div>
+      <div class="library-grid" id="libraryGrid"></div>
+    </div>
+  </div>
+
+  <div class="invoice-viewer-overlay" id="invoiceViewerOverlay" hidden>
+    <div class="invoice-viewer-shell">
+      <div class="invoice-viewer-head">
+        <div>
+          <div class="library-kicker">SAVED INVOICE</div>
+          <h2 id="viewerTitle">Invoice</h2>
+        </div>
+        <button class="library-close" id="closeViewerBtn" aria-label="Close">×</button>
+      </div>
+      <div class="viewer-actions">
+        <button class="btn" id="editViewerBtn">Edit invoice</button>
+        <button class="btn primary" id="downloadViewerBtn">Download PDF</button>
+        <button class="btn danger" id="deleteViewerBtn">Delete</button>
+      </div>
+      <div class="viewer-preview-wrap">
+        <section class="paper viewer-paper" id="viewerPaper"></section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const STORAGE_KEY = 'roseinheim_invoice_maker_v1';
+    const CLIENTS_KEY = 'roseinheim_invoice_clients_v1';
+    const INVOICES_KEY = 'roseinheim_saved_invoices_v1';
+
+    const defaultClients = [
+      {
+        name: 'Orsmond Aerial Spray BHM (Pty) Ltd',
+        address: 'PO Box 144\nPreekstoel Rd , Airfield\nBethlehem, 9701\n(58) 303-5035'
+      }
+    ];
+
+    let lineItems = [
+      { description: 'Spray Commission', amount: 76400 }
+    ];
+
+    let clients = loadClients();
+    let savedInvoices = loadSavedInvoices();
+    let selectedSavedId = null;
+
+    function loadClients() {
+      try {
+        const raw = localStorage.getItem(CLIENTS_KEY);
+        return raw ? JSON.parse(raw) : [...defaultClients];
+      } catch { return [...defaultClients]; }
+    }
+
+    function saveClients() {
+      localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+    }
+
+    function loadSavedInvoices() {
+      try {
+        const raw = localStorage.getItem(INVOICES_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch { return []; }
+    }
+
+    function persistSavedInvoices() {
+      localStorage.setItem(INVOICES_KEY, JSON.stringify(savedInvoices));
+    }
+
+    function invoiceTotal(state) {
+      const subtotal = (state.lineItems || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+      const vat = state.vatEnabled ? subtotal * (Number(state.vatRate) || 0) / 100 : 0;
+      return subtotal + vat;
+    }
+
+    function buildInvoicePaperHTML(state) {
+      const items = (state.lineItems || []).map(item => `<tr><td>${escapeHtml(item.description || '')}</td><td class="amount-cell">${formatMoney(item.amount)}</td></tr>`).join('');
+      const blankRows = Array.from({length: Math.max(0, 7 - (state.lineItems || []).length)}, () => '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>').join('');
+      const subtotal = (state.lineItems || []).reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
+      const vatRate = Number(state.vatRate) || 0;
+      const vat = state.vatEnabled ? subtotal * vatRate / 100 : 0;
+      const total = subtotal + vat;
+      const forText = state.forSelect === 'custom' ? (state.customFor || '') : (state.forSelect || '');
+      const totals = state.vatEnabled
+        ? `<tr><td>SUBTOTAL</td><td>${formatMoney(subtotal)}</td></tr><tr><td>VAT ${vatRate}%</td><td>${formatMoney(vat)}</td></tr><tr><td>TOTAL</td><td>${formatMoney(total)}</td></tr>`
+        : `<tr><td>TOTAL</td><td>${formatMoney(total)}</td></tr>`;
+      return `
+        <div class="invoice-head">
+          <div class="company-name">${escapeHtml(state.companyName || '')}</div>
+          <div class="invoice-word">INVOICE</div>
+        </div>
+        <div class="meta-grid">
+          <div>
+            <div class="address-block">${escapeHtml(state.companyAddress || '')}</div>
+            <div class="bill-title">Bill To:</div>
+            <div class="client-block"><strong>${escapeHtml(state.clientName || '')}</strong><br><span>${escapeHtml(state.clientAddress || '')}</span></div>
+          </div>
+          <div class="invoice-meta">
+            <strong>DATE:</strong><span>${formatDate(state.invoiceDate || '')}</span>
+            <strong>INVOICE #</strong><span>${escapeHtml(state.invoiceNo || '')}</span>
+            <strong>FOR:</strong><span>${escapeHtml(forText)}</span>
+          </div>
+        </div>
+        <table class="items-table"><thead><tr><th>DESCRIPTION</th><th>AMOUNT</th></tr></thead><tbody>${items}${blankRows}</tbody></table>
+        <table class="totals">${totals}</table>
+        <div class="notes">
+          <div>${escapeHtml(state.paymentNote || '')}</div>
+          <div class="bank-card">
+            <div><small>Account</small><strong>${escapeHtml(state.accountName || '')}</strong></div>
+            <div><small>Bank / Branch</small><strong>${escapeHtml(state.bankName || '')} · ${escapeHtml(state.branchCode || '')}</strong></div>
+            <div><small>Account no.</small><strong>${escapeHtml(state.accountNo || '')}</strong></div>
+          </div>
+        </div>
+        <div class="thank-you">THANK YOU FOR YOUR BUSINESS!</div>`;
+    }
+
+    function openLibrary() {
+      $('libraryOverlay').hidden = false;
+      document.body.classList.add('modal-open');
+      $('librarySearch').value = '';
+      renderLibrary();
+      setTimeout(() => $('librarySearch').focus(), 50);
+    }
+
+    function closeLibrary() {
+      $('libraryOverlay').hidden = true;
+      if ($('invoiceViewerOverlay').hidden) document.body.classList.remove('modal-open');
+    }
+
+    function renderLibrary(query='') {
+      const grid = $('libraryGrid');
+      const q = query.trim().toLowerCase();
+      const list = [...savedInvoices]
+        .sort((a,b) => (b.savedAt || '').localeCompare(a.savedAt || ''))
+        .filter(inv => {
+          const s = inv.state || {};
+          return !q || [s.invoiceNo,s.clientName,s.forSelect,s.customFor].some(v => String(v || '').toLowerCase().includes(q));
+        });
+      $('libraryCount').textContent = `${list.length} invoice${list.length === 1 ? '' : 's'}`;
+      grid.innerHTML = '';
+      if (!list.length) {
+        grid.innerHTML = `<div class="library-empty">${savedInvoices.length ? 'No invoices match your search.' : 'No saved invoices yet. Save an invoice and it will appear here.'}</div>`;
+        return;
+      }
+      list.forEach(inv => {
+        const st = inv.state || {};
+        const card = document.createElement('div');
+        card.className = 'library-card';
+        card.dataset.libraryId = inv.id;
+        card.innerHTML = `
+          <div class="library-card-top">
+            <div class="library-card-no">Invoice ${escapeHtml(st.invoiceNo || 'Untitled')}</div>
+            <div class="library-card-total">${formatMoney(invoiceTotal(st))}</div>
+          </div>
+          <div class="library-card-client">${escapeHtml(st.clientName || 'No client')}</div>
+          <div class="library-card-meta"><span>${formatDate(st.invoiceDate || '')}</span><span>${escapeHtml(st.forSelect === 'custom' ? (st.customFor || '') : (st.forSelect || ''))}</span></div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function openInvoiceViewer(id) {
+      const inv = savedInvoices.find(x => x.id === id);
+      if (!inv) return;
+      selectedSavedId = id;
+      $('viewerTitle').textContent = `Invoice ${inv.state?.invoiceNo || ''}`;
+      $('viewerPaper').innerHTML = buildInvoicePaperHTML(inv.state || {});
+      $('invoiceViewerOverlay').hidden = false;
+      document.body.classList.add('modal-open');
+    }
+
+    function closeInvoiceViewer() {
+      $('invoiceViewerOverlay').hidden = true;
+      if ($('libraryOverlay').hidden) document.body.classList.remove('modal-open');
+    }
+
+    function downloadInvoicePDF(inv) {
+      if (!inv) return;
+      const st = inv.state || {};
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return flash('Allow pop-ups so the PDF download can open.');
+      const styles = document.querySelector('style').innerHTML;
+      printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${escapeHtml(st.invoiceNo || '')}</title><style>${styles}
+        body{background:#fff;margin:0;} .paper{width:210mm;min-height:297mm;margin:0 auto;box-shadow:none;border-radius:0;padding:14mm 15mm 13mm;}
+        .builder,.library-overlay,.invoice-viewer-overlay{display:none!important;}
+        @page{size:A4;margin:0;}
+      </style></head><body><section class="paper">${buildInvoicePaperHTML(st)}</section><script>window.onload=()=>{setTimeout(()=>window.print(),200)}<\/script></body></html>`);
+      printWindow.document.close();
+    }
+
+    function renderSavedInvoices() {
+      $('savedCount').textContent = `${savedInvoices.length} saved`;
+      if (!$('libraryOverlay').hidden) renderLibrary($('librarySearch').value);
+    }
+
+    function saveCurrentInvoice() {
+      const state = getState();
+      const invoiceNo = (state.invoiceNo || '').trim();
+      if (!invoiceNo) return flash('Enter an invoice number first.');
+      const existing = savedInvoices.find(inv => (inv.state?.invoiceNo || '').trim().toLowerCase() === invoiceNo.toLowerCase());
+      if (existing) {
+        existing.state = JSON.parse(JSON.stringify(state));
+        existing.savedAt = new Date().toISOString();
+        selectedSavedId = existing.id;
+        flash(`Invoice ${invoiceNo} updated.`);
+      } else {
+        const record = {
+          id: (crypto.randomUUID ? crypto.randomUUID() : 'inv-' + Date.now()),
+          savedAt: new Date().toISOString(),
+          state: JSON.parse(JSON.stringify(state))
+        };
+        savedInvoices.push(record);
+        selectedSavedId = record.id;
+        flash(`Invoice ${invoiceNo} saved.`);
+      }
+      persistSavedInvoices();
+      renderSavedInvoices();
+    }
+
+    function applyState(s) {
+      if (!s) return;
+      for (const id of ['invoiceDate','invoiceNo','forSelect','customFor','clientName','clientAddress','companyName','companyAddress','paymentNote','accountName','bankName','branchCode','accountNo','vatRate']) {
+        if (s[id] !== undefined && $(id)) $(id).value = s[id];
+      }
+      $('vatEnabled').checked = !!s.vatEnabled;
+      if (Array.isArray(s.lineItems) && s.lineItems.length) lineItems = JSON.parse(JSON.stringify(s.lineItems));
+      $('customForWrap').hidden = $('forSelect').value !== 'custom';
+      $('vatRateWrap').hidden = !$('vatEnabled').checked;
+      populateClients($('clientName').value);
+      renderLineEditor();
+      renderPreview();
+    }
+
+    function loadSelectedInvoice() {
+      const inv = savedInvoices.find(x => x.id === selectedSavedId);
+      if (!inv) return flash('Select a saved invoice first.');
+      applyState(inv.state);
+      flash(`Invoice ${inv.state.invoiceNo || ''} loaded.`);
+      renderSavedInvoices();
+    }
+
+    function populateClients(selectedName) {
+      const sel = $('clientSelect');
+      sel.innerHTML = '';
+      clients.forEach((c, i) => {
+        const o = document.createElement('option');
+        o.value = i;
+        o.textContent = c.name;
+        sel.appendChild(o);
+      });
+      const custom = document.createElement('option');
+      custom.value = 'custom';
+      custom.textContent = '+ Custom client';
+      sel.appendChild(custom);
+
+      if (selectedName) {
+        const idx = clients.findIndex(c => c.name === selectedName);
+        sel.value = idx >= 0 ? String(idx) : 'custom';
+      }
+    }
+
+    function formatMoney(value) {
+      const n = Number(value) || 0;
+      return 'R ' + new Intl.NumberFormat('en-ZA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(n).replace(/,/g, ' ');
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+      const [y,m,d] = value.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const tz = d.getTimezoneOffset() * 60000;
+      return new Date(d - tz).toISOString().slice(0,10);
+    }
+
+    function renderLineEditor() {
+      const host = $('lineItems');
+      host.innerHTML = '';
+      lineItems.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'row-card';
+        card.innerHTML = `
+          ${lineItems.length > 1 ? `<button class="remove-line" title="Remove" data-remove="${index}">×</button>` : ''}
+          <div class="field" style="margin-top:0;">
+            <label>Description</label>
+            <select data-desc-select="${index}">
+              <option>Spray Commission</option>
+              <option>Fire Fighting</option>
+              <option>Crop Spraying</option>
+              <option>Standby Fee</option>
+              <option>Ferry Flight</option>
+              <option>Aircraft Hire</option>
+              <option>Fuel / Expenses</option>
+              <option value="custom">Other / Custom</option>
+            </select>
+          </div>
+          <div class="field" data-custom-wrap="${index}" hidden>
+            <label>Custom description</label>
+            <input data-custom-desc="${index}" value="${escapeHtml(item.description)}" />
+          </div>
+          <div class="field">
+            <label>Amount (R)</label>
+            <input data-amount="${index}" type="number" step="0.01" min="0" value="${Number(item.amount) || 0}" />
+          </div>
+        `;
+        host.appendChild(card);
+
+        const select = card.querySelector(`[data-desc-select="${index}"]`);
+        const known = [...select.options].map(o=>o.value).filter(v=>v !== 'custom');
+        if (known.includes(item.description)) {
+          select.value = item.description;
+        } else {
+          select.value = 'custom';
+          card.querySelector(`[data-custom-wrap="${index}"]`).hidden = false;
+        }
+      });
+    }
+
+    function escapeHtml(str='') {
+      return String(str).replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s]));
+    }
+
+    function getForText() {
+      return $('forSelect').value === 'custom' ? $('customFor').value : $('forSelect').value;
+    }
+
+    function renderPreview() {
+      $('pCompanyName').textContent = $('companyName').value;
+      $('pCompanyAddress').textContent = $('companyAddress').value;
+      $('pClientName').textContent = $('clientName').value;
+      $('pClientAddress').textContent = $('clientAddress').value;
+      $('pDate').textContent = formatDate($('invoiceDate').value);
+      $('pInvoiceNo').textContent = $('invoiceNo').value;
+      $('pFor').textContent = getForText();
+      $('pPaymentNote').textContent = $('paymentNote').value;
+      $('pAccountName').textContent = $('accountName').value;
+      $('pBank').textContent = $('bankName').value;
+      $('pBranch').textContent = $('branchCode').value;
+      $('pAccountNo').textContent = $('accountNo').value;
+
+      const tbody = $('pItems');
+      tbody.innerHTML = '';
+      lineItems.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(item.description || '')}</td><td class="amount-cell">${formatMoney(item.amount)}</td>`;
+        tbody.appendChild(tr);
+      });
+      const blankRows = Math.max(0, 7 - lineItems.length);
+      for (let i=0; i<blankRows; i++) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>&nbsp;</td><td>&nbsp;</td>';
+        tbody.appendChild(tr);
+      }
+
+      const subtotal = lineItems.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+      const vatEnabled = $('vatEnabled').checked;
+      const vatRate = Number($('vatRate').value) || 0;
+      const vat = vatEnabled ? subtotal * vatRate / 100 : 0;
+      const total = subtotal + vat;
+      const totals = $('pTotals');
+      totals.innerHTML = vatEnabled
+        ? `<tr><td>SUBTOTAL</td><td>${formatMoney(subtotal)}</td></tr>
+           <tr><td>VAT ${vatRate}%</td><td>${formatMoney(vat)}</td></tr>
+           <tr><td>TOTAL</td><td>${formatMoney(total)}</td></tr>`
+        : `<tr><td>TOTAL</td><td>${formatMoney(total)}</td></tr>`;
+
+      saveState();
+    }
+
+    function getState() {
+      return {
+        invoiceDate: $('invoiceDate').value,
+        invoiceNo: $('invoiceNo').value,
+        forSelect: $('forSelect').value,
+        customFor: $('customFor').value,
+        clientName: $('clientName').value,
+        clientAddress: $('clientAddress').value,
+        companyName: $('companyName').value,
+        companyAddress: $('companyAddress').value,
+        paymentNote: $('paymentNote').value,
+        accountName: $('accountName').value,
+        bankName: $('bankName').value,
+        branchCode: $('branchCode').value,
+        accountNo: $('accountNo').value,
+        vatEnabled: $('vatEnabled').checked,
+        vatRate: $('vatRate').value,
+        lineItems
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getState()));
+    }
+
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (!s) return false;
+        for (const id of ['invoiceDate','invoiceNo','forSelect','customFor','clientName','clientAddress','companyName','companyAddress','paymentNote','accountName','bankName','branchCode','accountNo','vatRate']) {
+          if (s[id] !== undefined && $(id)) $(id).value = s[id];
+        }
+        $('vatEnabled').checked = !!s.vatEnabled;
+        if (Array.isArray(s.lineItems) && s.lineItems.length) lineItems = s.lineItems;
+        return true;
+      } catch { return false; }
+    }
+
+    function setDefaultClient() {
+      const c = clients[0] || defaultClients[0];
+      $('clientName').value = c.name;
+      $('clientAddress').value = c.address;
+      populateClients(c.name);
+    }
+
+    function nextInvoiceNumber(current) {
+      const year = String(new Date().getFullYear()).slice(-2);
+      const match = String(current || '').match(/(\d+)/);
+      const next = match ? Number(match[1]) + 1 : 1;
+      return String(next).padStart(3, '0') + '/' + year;
+    }
+
+    function flash(msg) {
+      $('status').textContent = msg;
+      clearTimeout(flash.t);
+      flash.t = setTimeout(() => $('status').textContent = 'Auto-save is on. Your invoice stays in this browser.', 2500);
+    }
+
+    function bindEvents() {
+      document.querySelector('.builder').addEventListener('input', (e) => {
+        if (e.target.matches('[data-amount]')) {
+          const i = Number(e.target.dataset.amount);
+          lineItems[i].amount = Number(e.target.value) || 0;
+        }
+        if (e.target.matches('[data-custom-desc]')) {
+          const i = Number(e.target.dataset.customDesc);
+          lineItems[i].description = e.target.value;
+        }
+        renderPreview();
+      });
+
+      document.querySelector('.builder').addEventListener('change', (e) => {
+        if (e.target.matches('[data-desc-select]')) {
+          const i = Number(e.target.dataset.descSelect);
+          const card = e.target.closest('.row-card');
+          const wrap = card.querySelector(`[data-custom-wrap="${i}"]`);
+          if (e.target.value === 'custom') {
+            wrap.hidden = false;
+            const custom = card.querySelector(`[data-custom-desc="${i}"]`);
+            lineItems[i].description = custom.value || 'Custom item';
+            custom.focus();
+          } else {
+            wrap.hidden = true;
+            lineItems[i].description = e.target.value;
+          }
+        }
+        if (e.target.id === 'forSelect') {
+          $('customForWrap').hidden = e.target.value !== 'custom';
+          if (e.target.value === 'custom') $('customFor').focus();
+        }
+        if (e.target.id === 'vatEnabled') {
+          $('vatRateWrap').hidden = !e.target.checked;
+        }
+        renderPreview();
+      });
+
+      document.querySelector('.builder').addEventListener('click', (e) => {
+        if (e.target.matches('[data-remove]')) {
+          const i = Number(e.target.dataset.remove);
+          lineItems.splice(i, 1);
+          renderLineEditor();
+          renderPreview();
+        }
+      });
+
+      $('addLineBtn').addEventListener('click', () => {
+        lineItems.push({ description: 'Spray Commission', amount: 0 });
+        renderLineEditor();
+        renderPreview();
+        document.querySelectorAll('.row-card').item(lineItems.length-1)?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      });
+
+      $('clientSelect').addEventListener('change', () => {
+        if ($('clientSelect').value === 'custom') {
+          $('clientName').value = '';
+          $('clientAddress').value = '';
+          $('clientName').focus();
+        } else {
+          const c = clients[Number($('clientSelect').value)];
+          if (c) {
+            $('clientName').value = c.name;
+            $('clientAddress').value = c.address;
+          }
+        }
+        renderPreview();
+      });
+
+      $('saveClientBtn').addEventListener('click', () => {
+        const name = $('clientName').value.trim();
+        const address = $('clientAddress').value.trim();
+        if (!name) return flash('Enter a client name first.');
+        const idx = clients.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
+        if (idx >= 0) clients[idx] = { name, address };
+        else clients.push({ name, address });
+        saveClients();
+        populateClients(name);
+        flash('Client preset saved.');
+      });
+
+      $('deleteClientBtn').addEventListener('click', () => {
+        const idx = clients.findIndex(c => c.name === $('clientName').value);
+        if (idx < 0) return flash('This client is not a saved preset.');
+        if (!confirm(`Delete ${clients[idx].name} from presets?`)) return;
+        clients.splice(idx, 1);
+        saveClients();
+        populateClients();
+        if (clients[0]) {
+          $('clientSelect').value = '0';
+          $('clientName').value = clients[0].name;
+          $('clientAddress').value = clients[0].address;
+        }
+        renderPreview();
+      });
+
+      $('saveInvoiceBtn').addEventListener('click', saveCurrentInvoice);
+
+      $('openLibraryBtn').addEventListener('click', openLibrary);
+      $('closeLibraryBtn').addEventListener('click', closeLibrary);
+      $('libraryOverlay').addEventListener('click', (e) => { if (e.target === $('libraryOverlay')) closeLibrary(); });
+      $('librarySearch').addEventListener('input', (e) => renderLibrary(e.target.value));
+      $('libraryGrid').addEventListener('click', (e) => {
+        const card = e.target.closest('[data-library-id]');
+        if (card) openInvoiceViewer(card.dataset.libraryId);
+      });
+      $('closeViewerBtn').addEventListener('click', closeInvoiceViewer);
+      $('invoiceViewerOverlay').addEventListener('click', (e) => { if (e.target === $('invoiceViewerOverlay')) closeInvoiceViewer(); });
+      $('editViewerBtn').addEventListener('click', () => {
+        const inv = savedInvoices.find(x => x.id === selectedSavedId);
+        if (!inv) return;
+        applyState(inv.state);
+        closeInvoiceViewer();
+        closeLibrary();
+        flash(`Invoice ${inv.state?.invoiceNo || ''} loaded for editing.`);
+      });
+      $('downloadViewerBtn').addEventListener('click', () => {
+        const inv = savedInvoices.find(x => x.id === selectedSavedId);
+        downloadInvoicePDF(inv);
+      });
+      $('deleteViewerBtn').addEventListener('click', () => {
+        const inv = savedInvoices.find(x => x.id === selectedSavedId);
+        if (!inv) return;
+        const label = inv.state?.invoiceNo || 'this invoice';
+        if (!confirm(`Delete saved invoice ${label}?`)) return;
+        savedInvoices = savedInvoices.filter(x => x.id !== selectedSavedId);
+        selectedSavedId = null;
+        persistSavedInvoices();
+        closeInvoiceViewer();
+        renderSavedInvoices();
+        renderLibrary($('librarySearch').value);
+        flash(`Invoice ${label} deleted.`);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (!$('invoiceViewerOverlay').hidden) closeInvoiceViewer();
+          else if (!$('libraryOverlay').hidden) closeLibrary();
+        }
+      });
+
+      $('newInvoiceBtn').addEventListener('click', () => {
+        selectedSavedId = null;
+        const nextNo = nextInvoiceNumber($('invoiceNo').value);
+        $('invoiceNo').value = nextNo;
+        $('invoiceDate').value = todayISO();
+        lineItems = [{ description: 'Spray Commission', amount: 0 }];
+        $('vatEnabled').checked = false;
+        $('vatRateWrap').hidden = true;
+        renderLineEditor();
+        renderPreview();
+        renderSavedInvoices();
+        flash(`New invoice ${nextNo} ready.`);
+      });
+
+      $('exportBtn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify({ state:getState(), clients, savedInvoices }, null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `invoice-maker-backup-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      $('importBtn').addEventListener('click', () => $('importFile').click());
+      $('importFile').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (data.clients) {
+            clients = data.clients;
+            saveClients();
+            populateClients();
+          }
+          if (Array.isArray(data.savedInvoices)) {
+            savedInvoices = data.savedInvoices;
+            persistSavedInvoices();
+          }
+          if (data.state) localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+          location.reload();
+        } catch { flash('Could not import that backup file.'); }
+      });
+
+      $('resetBtn').addEventListener('click', () => {
+        if (!confirm('Reset the app to the original invoice defaults?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(CLIENTS_KEY);
+        localStorage.removeItem(INVOICES_KEY);
+        location.reload();
+      });
+    }
+
+    function init() {
+      $('invoiceDate').value = todayISO();
+      populateClients();
+      setDefaultClient();
+      loadState();
+      populateClients($('clientName').value);
+      $('customForWrap').hidden = $('forSelect').value !== 'custom';
+      $('vatRateWrap').hidden = !$('vatEnabled').checked;
+      renderLineEditor();
+      bindEvents();
+      renderPreview();
+      renderSavedInvoices();
+    }
+
+    init();
+  </script>
+</body>
+</html>
